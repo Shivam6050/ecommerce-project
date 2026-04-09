@@ -116,16 +116,23 @@ const ShopContextProvider = (props) => {
 
   const getProductsData = async () => {
     try {
+      if (!backendUrl) {
+          console.warn("VITE_BACKEND_URL is not defined. Please set it in your environment variables.");
+          return;
+      }
       const response = await axios.get(backendUrl + "/api/product/list");
       if (response.data.success) {
         setProducts(response.data.products);
       } else {
+        console.error("API Error:", response.data.message);
         toast.error(response.data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      console.error("Fetch Error:", error);
+      toast.error("Error fetching products: " + error.message);
     }
   };
+
 
   useEffect(() => {
     getProductsData();
