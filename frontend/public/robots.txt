@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://your-website-domain.vercel.app/sitemap.xml
+Sitemap: https://ecommerce-project-frontend-two.vercel.app/sitemap.xml
