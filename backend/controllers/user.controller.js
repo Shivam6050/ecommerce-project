@@ -3,8 +3,11 @@ import validator from "validator";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
+import nodemailer from "nodemailer";
+import crypto from "crypto";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 
 
 
@@ -130,11 +133,89 @@ const googleLogin = async (req, res) => {
     }
 }
 
+// Route for forgot password (OTP)
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await userModel.findOne({ email });
+
+        if (!user) {
+            return res.json({ success: false, message: "User not found" });
+        }
+
+        // Generate a 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.resetPasswordOtp = otp;
+        user.resetPasswordOtpExpires = Date.now() + 600000; // 10 minutes
+        await user.save();
+
+        const transporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            },
+            tls: {
+                rejectUnauthorized: false
+            }
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: user.email,
+            subject: 'Your Password Reset OTP',
+            text: `Your OTP for resetting your password is: ${otp}\n\nThis OTP is valid for 10 minutes.\n`
+        };
+
+        await transporter.sendMail(mailOptions);
+        res.json({ success: true, message: "OTP sent to your email" });
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// Route for reset password (OTP)
+const resetPassword = async (req, res) => {
+    try {
+        const { email, otp, password } = req.body;
+        const user = await userModel.findOne({
+            email,
+            resetPasswordOtp: otp,
+            resetPasswordOtpExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.json({ success: false, message: "Invalid or expired OTP" });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(password, salt);
+        user.resetPasswordOtp = undefined;
+        user.resetPasswordOtpExpires = undefined;
+        await user.save();
+
+        res.json({ success: true, message: "Password has been updated" });
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+
 
 export {
+
 
     loginUser,
     registerUser,
     adminLogin,
-    googleLogin
-}
+    googleLogin,
+    forgotPassword,
+    resetPassword
+}
+
