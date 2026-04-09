@@ -2,12 +2,19 @@ import mongoose from "mongoose";
 
 const connectDB = async () => {
 
+    // Disable buffering so we get real errors immediately if not connected
+    mongoose.set('bufferCommands', false);
+
     mongoose.connection.on('connected', () => {
-        console.log("DB Connected");
+        console.log("DB Connected Successfully");
     })
 
+    mongoose.connection.on('error', (err) => {
+        console.error("Mongoose Connection Error:", err);
+    });
+
     if (!process.env.MONGODB_URI) {
-        console.error("MONGODB_URI is not defined in environment variables.");
+        console.error("MONGODB_URI is missging in environment variables.");
         return;
     }
 
@@ -17,7 +24,7 @@ const connectDB = async () => {
         console.error("MongoDB Connection Error:", error);
     }
 
-
 }
+
 
 export default connectDB;
