@@ -2,9 +2,6 @@ import mongoose from "mongoose";
 
 const connectDB = async () => {
 
-    // Disable buffering so we get real errors immediately if not connected
-    mongoose.set('bufferCommands', false);
-
     mongoose.connection.on('connected', () => {
         console.log("DB Connected Successfully");
     })
@@ -25,6 +22,7 @@ const connectDB = async () => {
     }
 
 }
+
 
 
 export default connectDB;
