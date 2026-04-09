@@ -2,6 +2,10 @@ import userModel from "../models/user.model.js";
 import validator from "validator";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { OAuth2Client } from "google-auth-library";
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 
 
 const createToken = (id) => {
@@ -93,9 +97,44 @@ const adminLogin = async (req, res) => {
 }
 
 
+//Route for google login
+const googleLogin = async (req, res) => {
+    try {
+        const { idToken } = req.body;
+
+        const ticket = await client.verifyIdToken({
+            idToken,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const { name, email } = ticket.getPayload();
+
+        let user = await userModel.findOne({ email });
+
+        if (!user) {
+            // Create user without password if it doesn't exist
+            user = new userModel({
+                name,
+                email,
+                password: "" // No password for Google users
+            });
+            await user.save();
+        }
+
+        const token = createToken(user._id);
+        res.json({ success: true, token });
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
 
 export {
+
     loginUser,
     registerUser,
-    adminLogin
-}
+    adminLogin,
+    googleLogin
+}
