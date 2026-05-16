@@ -1,4 +1,13 @@
+# robots.txt for your ecommerce website
+
 User-agent: *
 Allow: /
+Disallow: /cart
+Disallow: /login
+Disallow: /place-order
+Disallow: /orders
+Disallow: /verify
+Disallow: /reset-password
 
+# Sitemap location (replace with your actual domain)
 Sitemap: https://ecommerce-project-frontend-two.vercel.app/sitemap.xml

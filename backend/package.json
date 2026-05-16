@@ -8,7 +8,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "server": "nodemon server.js"
+    "server": "nodemon server.js",
+    "generate-sitemap": "node sitemap-generator-fixed.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
