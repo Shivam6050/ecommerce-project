@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import axios from 'axios'
-import { backendUrl, currency } from '../App.jsx'
+import { backendUrl, currency } from '../constants'
 import { toast } from 'react-toastify'
 
 const List = ({ token }) => {
 
   const [list, setList] = useState([])
 
-  const fetchList = async () => {
+  const fetchList = useCallback(async () => {
     try {
         const response = await axios.get(backendUrl + "/api/product/list")
         if(response.data.success){
@@ -19,7 +19,7 @@ const List = ({ token }) => {
       console.log(error)
       toast.error(error.message)
     }
-  }
+  }, [])
 
   const removeProduct = async (id) => {
     try {
@@ -38,8 +38,19 @@ const List = ({ token }) => {
     
 
   useEffect(() => {
-    fetchList()
-  }, [])
+    let isMounted = true
+
+    const loadList = async () => {
+      await fetchList()
+      if (!isMounted) return
+    }
+
+    void loadList()
+
+    return () => {
+      isMounted = false
+    }
+  }, [fetchList])
 
   return (
     <>

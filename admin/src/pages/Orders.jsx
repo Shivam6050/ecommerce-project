@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
-import { backendUrl, currency } from "../App";
+import { backendUrl, currency } from "../constants";
 import { toast } from "react-toastify";
 import { assets } from "../assets/admin_assets/assets";
 
 const Orders = ({ token }) => {
   const [orders, setOrders] = useState([]);
 
-  const fetchAllOrders = async () => {
+  const fetchAllOrders = useCallback(async () => {
     if (!token) {
       return null;
     }
@@ -24,7 +24,7 @@ const Orders = ({ token }) => {
       console.log(error);
       toast.error(error.message);
     }
-  };
+  }, [token]);
 
   const statusHandler = async (event, orderId) => {
     try {
@@ -51,8 +51,19 @@ const Orders = ({ token }) => {
   };
 
   useEffect(() => {
-    fetchAllOrders();
-  }, [token]);
+    let isMounted = true;
+
+    const loadOrders = async () => {
+      await fetchAllOrders();
+      if (!isMounted) return;
+    };
+
+    void loadOrders();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchAllOrders]);
   return (
     <div>
       <h3>Order Page</h3>
